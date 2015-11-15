@@ -2,16 +2,20 @@ defmodule Fam.SessionController do
   use Fam.Web, :controller
 
   alias Fam.User
-  alias Fam.Token
+  alias Fam.Registration
 
   plug :scrub_params, "user" when action === :create
 
-  def create(conn, %{"user" => user_params}) do
-    token = Token.generate
-    user_params = Map.put(user_params, "token", token)
+  def create(conn, %{"user" => user_params, "token" => token}) do
     changeset = User.changeset(%User{}, user_params)
-    case Repo.insert(changeset) do
-      {:ok, _user} -> conn |> render data: %{token: token}
+    case Registration.create(token, changeset) do
+      {:ok, user} ->
+        conn
+        |> fetch_session
+        |> put_session(:user, user)
+        |> render data: %{
+          message: "User created"
+        }
       {:error, errors} ->
         conn
         |> put_status(422)

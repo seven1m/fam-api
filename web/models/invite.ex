@@ -1,16 +1,13 @@
-defmodule Fam.User do
+defmodule Fam.Invite do
   use Fam.Web, :model
 
-  schema "users" do
-    field :email, :string
-    field :first_name, :string
-    field :last_name, :string
-    field :crypted_password, :string
-    field :password, :string, virtual: true
+  schema "invites" do
+    field :token, :string
+
     timestamps
   end
 
-  @required_fields ~w(email first_name last_name password)
+  @required_fields ~w(token)
   @optional_fields ~w()
 
   @doc """

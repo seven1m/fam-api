@@ -6,7 +6,7 @@ defmodule Fam.Repo.Migrations.CreateUser do
       add :email, :string
       add :first_name, :string
       add :last_name, :string
-      add :token, :string, size: 25
+      add :crypted_password, :string
 
       timestamps
     end

@@ -5,7 +5,11 @@
 # is restricted to this project.
 use Mix.Config
 
-secret_key_base = System.get_env("SECRET_KEY_BASE")
+secret_key_base = if Mix.env == :test do
+  String.duplicate("x", 64)
+else
+  System.get_env("SECRET_KEY_BASE")
+end
 
 # Configures the endpoint
 config :fam, Fam.Endpoint,
@@ -15,10 +19,6 @@ config :fam, Fam.Endpoint,
   render_errors: [accepts: ~w(html json)],
   pubsub: [name: Fam.PubSub,
            adapter: Phoenix.PubSub.PG2]
-
-config :fam,
-  mailgun_domain: System.get_env("MAILGUN_DOMAIN"),
-  mailgun_key: System.get_env("MAILGUN_API_KEY")
 
 config :joken, config_module: Guardian.JWT
 
