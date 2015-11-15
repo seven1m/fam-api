@@ -44,6 +44,8 @@ defmodule Fam.SessionControllerTest do
     conn = post conn(), "/api/session",
       %{token: @valid_token, user: @person_attrs}
     assert json_response(conn, 200) == %{"message" => "User created"}
-    assert conn.private.plug_session["user"].__struct__ == Fam.User
+    session = conn.private.plug_session
+    %Fam.User{first_name: first_name} = session["user"]
+    assert first_name == "Tim"
   end
 end
