@@ -2,6 +2,8 @@ defmodule Fam.SessionControllerTest do
   use Fam.ConnCase
 
   alias Fam.Invite
+  alias Fam.User
+  alias Fam.Password
 
   @valid_token "abc123"
   @person_attrs %{
@@ -11,13 +13,8 @@ defmodule Fam.SessionControllerTest do
     password: "password"
   }
 
-  setup do
-    invite = %Invite{token: @valid_token}
-    Repo.insert!(invite)
-    {:ok, %{"foo" => "bar"}}
-  end
-
-  test "POST with bad invite token returns 422 with an error" do
+  test "get an error when token doesn't exist" do
+    %Invite{token: @valid_token} |> Repo.insert!
     conn = post conn(), "/api/session",
       %{token: "non-existent", user: @person_attrs}
     assert json_response(conn, 422) == %{
@@ -26,7 +23,8 @@ defmodule Fam.SessionControllerTest do
     }
   end
 
-  test "POST with missing user attributes returns 422 with errors" do
+  test "get an error when new user is not valid" do
+    %Invite{token: @valid_token} |> Repo.insert!
     conn = post conn(), "/api/session",
       %{token: @valid_token, user: %{}}
     assert json_response(conn, 422) == %{
@@ -40,12 +38,33 @@ defmodule Fam.SessionControllerTest do
     }
   end
 
-  test "POST with valid params returns 200 and adds the user to the session" do
+  test "create user when token and user is valid" do
+    %Invite{token: @valid_token} |> Repo.insert!
     conn = post conn(), "/api/session",
       %{token: @valid_token, user: @person_attrs}
-    assert json_response(conn, 200) == %{"message" => "User created"}
-    session = conn.private.plug_session
-    %Fam.User{first_name: first_name} = session["user"]
-    assert first_name == "Tim"
+      %{"message" => "User created", "token" => token} = json_response(conn, 200)
+      {:ok, %{"sub" => "User:" <> id}} = Guardian.decode_and_verify(token)
+      assert Repo.get(User, id).first_name == "Tim"
+  end
+
+  test "log user in when email and password are correct" do
+    %User{email: "tim@timmorgan.org", first_name: "Tim", last_name: "Morgan", crypted_password: Password.hash("password")}
+    |> Repo.insert!
+    conn = post conn(), "/api/session",
+      %{email: "tim@timmorgan.org", password: "password"}
+    %{"message" => "User authenticated", "token" => token} = json_response(conn, 200)
+    {:ok, %{"sub" => "User:" <> id}} = Guardian.decode_and_verify(token)
+    assert Repo.get(User, id).first_name == "Tim"
+  end
+
+  test "get an error when the password is incorrect" do
+    %User{email: "tim@timmorgan.org", first_name: "Tim", last_name: "Morgan", crypted_password: Password.hash("password")}
+    |> Repo.insert!
+    conn = post conn(), "/api/session",
+      %{email: "tim@timmorgan.org", password: "bad"}
+    assert json_response(conn, 401) == %{
+      "message" => "There was an error",
+      "errors" => "Email and password do not match our records"
+    }
   end
 end
