@@ -10,7 +10,7 @@ defmodule Fam.SessionController do
     case Registration.create(token, changeset) do
       {:ok, user} ->
         {:ok, token, _claims} = Guardian.encode_and_sign(user, :token)
-        respond(conn, 200, %{
+        respond(conn, 201, %{
           message: "User created",
           token: token})
       {:error, errors} ->
@@ -24,7 +24,7 @@ defmodule Fam.SessionController do
     case Login.create(email, password) do
       {:ok, user} ->
         {:ok, token, _claims} = Guardian.encode_and_sign(user, :token)
-        respond(conn, 200, %{
+        respond(conn, 201, %{
           message: "User authenticated",
           token: token})
       {:error, _error} ->

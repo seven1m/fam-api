@@ -42,7 +42,7 @@ defmodule Fam.SessionControllerTest do
     %Invite{token: @valid_token} |> Repo.insert!
     conn = post conn(), "/api/session",
       %{token: @valid_token, user: @person_attrs}
-      %{"message" => "User created", "token" => token} = json_response(conn, 200)
+      %{"message" => "User created", "token" => token} = json_response(conn, 201)
       {:ok, %{"sub" => "User:" <> id}} = Guardian.decode_and_verify(token)
       assert Repo.get(User, id).first_name == "Tim"
   end
@@ -52,7 +52,7 @@ defmodule Fam.SessionControllerTest do
     |> Repo.insert!
     conn = post conn(), "/api/session",
       %{email: "tim@timmorgan.org", password: "password"}
-    %{"message" => "User authenticated", "token" => token} = json_response(conn, 200)
+    %{"message" => "User authenticated", "token" => token} = json_response(conn, 201)
     {:ok, %{"sub" => "User:" <> id}} = Guardian.decode_and_verify(token)
     assert Repo.get(User, id).first_name == "Tim"
   end
