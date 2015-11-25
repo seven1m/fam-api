@@ -3,6 +3,9 @@ defmodule Fam.Login do
   alias Fam.User
   alias Comeonin.Bcrypt
 
+  def create(nil, _), do: {:error, :bad_email}
+  def create(_, nil), do: {:error, :bad_password}
+
   def create(email, password) do
     user = Repo.get_by User, email: email
     cond do
@@ -13,6 +16,8 @@ defmodule Fam.Login do
   end
 
   defp password_matches?(user, password) do
-    Bcrypt.checkpw(password, user.crypted_password)
+    if to_string(user.crypted_password) != "" do
+      Bcrypt.checkpw(password, user.crypted_password)
+    end
   end
 end
